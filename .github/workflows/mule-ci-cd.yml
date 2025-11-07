@@ -95,13 +95,6 @@ jobs:
         env:
           ANYPOINT_CONNECTED_APP_CLIENT_ID: ${{ secrets.ANYPOINT_CONNECTED_APP_CLIENT_ID }}
           ANYPOINT_CONNECTED_APP_CLIENT_SECRET: ${{ secrets.ANYPOINT_CONNECTED_APP_CLIENT_SECRET }}
-          anypoint.uri: ${{ github.event.inputs.anypointUri }}
-          anypoint.provider: ${{ github.event.inputs.provider }}
-          anypoint.env: ${{ github.event.inputs.environment }}
-          anypoint.target: ${{ github.event.inputs.target }}
-          app.name: ${{ github.event.inputs.appName }}
-          app.replicas: ${{ github.event.inputs.replicas }}
-          app.vcores: ${{ github.event.inputs.vCores }}
         run: mvn clean deploy --settings settings.xml
 
   deploy:
