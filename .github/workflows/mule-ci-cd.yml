@@ -130,11 +130,20 @@ jobs:
         env:
           ANYPOINT_CONNECTED_APP_CLIENT_ID: ${{ secrets.ANYPOINT_CONNECTED_APP_CLIENT_ID }}
           ANYPOINT_CONNECTED_APP_CLIENT_SECRET: ${{ secrets.ANYPOINT_CONNECTED_APP_CLIENT_SECRET }}
-          anypoint.uri: ${{ github.event.inputs.anypointUri }}
-          anypoint.provider: ${{ github.event.inputs.provider }}
-          anypoint.env: ${{ github.event.inputs.environment }}
-          anypoint.target: ${{ github.event.inputs.target }}
-          app.name: ${{ github.event.inputs.appName }}
-          app.replicas: ${{ github.event.inputs.replicas }}
-          app.vcores: ${{ github.event.inputs.vCores }}
-        run: mvn clean deploy -DmuleDeploy --settings settings.xml
+          ANYPOINT_URI: ${{ github.event.inputs.anypointUri }}
+          ANYPOINT_PROVIDER: ${{ github.event.inputs.provider }}
+          ANYPOINT_ENVIRONMENT: ${{ github.event.inputs.environment }}
+          ANYPOINT_TARGET: ${{ github.event.inputs.target }}
+          APP_NAME: ${{ github.event.inputs.appName }}
+          APP_REPLICAS: ${{ github.event.inputs.replicas }}
+          APP_VCORES: ${{ github.event.inputs.vCores }}
+        run: |
+          mvn clean deploy -DmuleDeploy \
+            -Danypoint.uri=${{ env.ANYPOINT_URI }} \
+            -Danypoint.provider=${{ env.ANYPOINT_PROVIDER }} \
+            -Danypoint.env=${{ env.ANYPOINT_ENVIRONMENT }} \
+            -Danypoint.target=${{ env.ANYPOINT_TARGET }} \
+            -Dapp.name=${{ env.APP_NAME }} \
+            -Dapp.replicas=${{ env.APP_REPLICAS }} \
+            -Dapp.vcores=${{ env.APP_VCORES }} \
+            --settings settings.xml
