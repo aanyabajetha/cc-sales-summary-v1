@@ -1,0 +1,140 @@
+name: MuleSoft CI/CD Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      javaVersion:
+        description: "Java version to use (8 or 17)"
+        required: true
+        default: "17"
+      anypointUri:
+        description: "Base URI for Anypoint"
+        required: true
+        default: "https://anypoint.mulesoft.com"
+      provider:
+        description: "Provider (e.g., CH2)"
+        required: true
+        default: "CH2"
+      environment:
+        description: "Environment name"
+        required: true
+        default: "Sandbox"
+      target:
+        description: "Target for CloudHub 2.0 deployment"
+        required: true
+      appName:
+        description: "Application name for CloudHub deployment"
+        required: true
+      replicas:
+        description: "Number of replicas to deploy"
+        required: false
+        default: "1"
+      vCores:
+        description: "vCores for CloudHub application"
+        required: false
+        default: "0.1"
+
+jobs:
+  build:
+    name: 🧱 Build Mule Application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ github.event.inputs.javaVersion }}
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Build Mule app
+        run: mvn clean package -DskipTests=true --settings settings.xml
+
+  publish:
+    name: Publish to Exchange
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ github.event.inputs.javaVersion }}
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Configure environment variables
+        run: |
+          echo "ANYPOINT_URI=${{ github.event.inputs.anypointUri }}" >> $GITHUB_ENV
+          echo "ANYPOINT_PROVIDER=${{ github.event.inputs.provider }}" >> $GITHUB_ENV
+          echo "ANYPOINT_ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          echo "ANYPOINT_TARGET=${{ github.event.inputs.target }}" >> $GITHUB_ENV
+          echo "APP_NAME=${{ github.event.inputs.appName }}" >> $GITHUB_ENV
+          echo "APP_REPLICAS=${{ github.event.inputs.replicas }}" >> $GITHUB_ENV
+          echo "APP_VCORES=${{ github.event.inputs.vCores }}" >> $GITHUB_ENV
+
+      - name: Publish to Exchange
+        env:
+          ANYPOINT_CONNECTED_APP_CLIENT_ID: ${{ secrets.ANYPOINT_CONNECTED_APP_CLIENT_ID }}
+          ANYPOINT_CONNECTED_APP_CLIENT_SECRET: ${{ secrets.ANYPOINT_CONNECTED_APP_CLIENT_SECRET }}
+          anypoint.uri: ${{ github.event.inputs.anypointUri }}
+          anypoint.provider: ${{ github.event.inputs.provider }}
+          anypoint.env: ${{ github.event.inputs.environment }}
+          anypoint.target: ${{ github.event.inputs.target }}
+          app.name: ${{ github.event.inputs.appName }}
+          app.replicas: ${{ github.event.inputs.replicas }}
+          app.vcores: ${{ github.event.inputs.vCores }}
+        run: mvn clean deploy --settings settings.xml
+
+  deploy:
+    name: Deploy to CloudHub 2.0
+    runs-on: ubuntu-latest
+    needs: publish
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ github.event.inputs.javaVersion }}
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Deploy to CloudHub 2.0
+        env:
+          ANYPOINT_CONNECTED_APP_CLIENT_ID: ${{ secrets.ANYPOINT_CONNECTED_APP_CLIENT_ID }}
+          ANYPOINT_CONNECTED_APP_CLIENT_SECRET: ${{ secrets.ANYPOINT_CONNECTED_APP_CLIENT_SECRET }}
+          anypoint.uri: ${{ github.event.inputs.anypointUri }}
+          anypoint.provider: ${{ github.event.inputs.provider }}
+          anypoint.env: ${{ github.event.inputs.environment }}
+          anypoint.target: ${{ github.event.inputs.target }}
+          app.name: ${{ github.event.inputs.appName }}
+          app.replicas: ${{ github.event.inputs.replicas }}
+          app.vcores: ${{ github.event.inputs.vCores }}
+        run: mvn clean deploy -DmuleDeploy --settings settings.xml
