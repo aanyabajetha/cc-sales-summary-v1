@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Sales Summary</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0f4f8 0%, #e9eef5 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+    }
+    .header {
+      background: linear-gradient(120deg, #1976d2, #43a047);
+      color: #ffffff;
+      padding: 28px 36px;
+      font-size: 1.9em;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    .summary {
+      padding: 28px 36px 10px 36px;
+      font-size: 1.05em;
+      line-height: 1.75;
+      color: #444;
+    }
+    .stats {
+      padding: 20px 36px;
+      font-size: 1.1em;
+      color: #222;
+    }
+    .stats table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .stats td {
+      padding: 10px 0;
+      border-bottom: 1px solid #e0e4ea;
+    }
+    .stats td:first-child {
+      font-weight: 600;
+      color: #1976d2;
+    }
+    .footer {
+      background: #f8f9fb;
+      border-top: 1px solid #e0e4ea;
+      padding: 20px 36px;
+      font-size: 0.97em;
+      color: #555;
+      border-radius: 0 0 16px 16px;
+    }
+    .footer strong {
+      color: #1976d2;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 10px; }
+      .header { font-size: 1.5em; padding: 20px; text-align: center; }
+      .summary, .stats, .footer { padding: 18px; font-size: 1em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">📊 Daily Sales Summary</div>
+
+      <div class="summary">
+        Hello <strong>Sales Team</strong>,<br><br>
+        Here’s your performance report for <strong> #[now() as Date] </strong>:
+      </div>
+
+      <div class="stats">
+        <table>
+          <tr><td>Total Orders</td><td> #[payload.totalOrders] </td></tr>
+          <tr><td>Total Sales</td><td>₹ #[payload.totalSales] </td></tr>
+          <tr><td>Average Sale</td><td>₹ #[payload.averageSale] </td></tr>
+        </table>
+      </div>
+
+      <div class="footer">
+        Keep up the great work!<br>
+        <strong>Acme Sales Analytics</strong><br>
+        Automated Report • © 2025
+      </div>
+    </div>
+  </div>
+</body>
+</html>

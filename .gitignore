@@ -1,0 +1,47 @@
+# Maven / build
+/target/
+/release/
+/dependency-reduced-pom.xml
+/build/
+
+# Mule runtime / temporary
+/.mule/
+/.mule/
+/.mule-deploy.properties
+/logs/
+/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+/.idea/
+/*.iml
+/.project
+/.classpath
+/.settings/
+.vscode/
+
+# Node / frontend (if any)
+node_modules/
+
+# Eclipse
+.metadata/
+
+# macOS
+.AppleDouble
+
+# local maven settings in home (do NOT commit your ~/.m2/settings.xml)
+/.m2/
+/**/settings.xml            # This excludes any settings.xml in m2 but note: the project-level settings.xml in repo root will not be ignored because we track it explicitly below
+
+# Keep these specific files tracked (do NOT ignore):
+!pom.xml
+!mule-artifact.json
+!src/
+!settings.xml
+!README.md
+
+.tooling-project
+exchange-docs

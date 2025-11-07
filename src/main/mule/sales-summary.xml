@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	
+	<flow name="sales-summary-flow"
+		doc:id="10138f61-1777-440b-8572-4f00fe54191e">
+		<scheduler doc:name="Every Day"
+			doc:id="8c8e6b09-56b6-4fb8-b26d-a8d40f73e5a9">
+			<scheduling-strategy>
+				<fixed-frequency frequency="1" timeUnit="DAYS" />
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="INFO : START"
+			doc:id="ac6fef93-930f-454d-98b6-0e2675590e12"
+			message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow Start",&#10;    message: "Generating Sales Summary for the day",&#10;    correlationId: correlationId&#10;}]' />
+		<ee:transform doc:name="Mock CSV data &amp; convert to JSON">
+			<ee:message>
+				<ee:set-payload
+					resource="scripts/generate-sales-data.dwl" />
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Generate Summary">
+			<ee:message>
+				<ee:set-payload
+					resource="scripts/generate-summary.dwl" />
+			</ee:message>
+		</ee:transform>
+		<parse-template doc:name="Email Body" doc:id="a6521b0e-66c5-49c4-99fc-dcc0734c8c12" location="html/emailBody.html"/>
+		<email:send doc:name="Summary Email" doc:id="d078c7ca-c4a2-4bd9-81b4-ff67bccbc8ca" fromAddress="aanya.bajetha@caeliusconsulting.com" toAddresses='#[["aanyabajetha04@gmail.com"]]' config-ref="Email_SMTP" subject='#["Daily Sales Summary - " ++ now() as Date]'/>
+		<logger level="INFO" doc:name="INFO : END"
+			doc:id="bad53d91-d884-4f19-b6b8-b563f784c28d"
+			message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    appName: app.name,&#10;    flowName : flow.name,&#10;    position: "Flow End",&#10;    message: "Daily Sales Summary generated successfully",&#10;    correlationId: correlationId&#10;}]' />
+	</flow>
+</mule>
