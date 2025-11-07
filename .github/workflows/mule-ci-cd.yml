@@ -12,9 +12,9 @@ on:
         required: true
         default: "https://anypoint.mulesoft.com"
       provider:
-        description: "Provider (e.g., CH2)"
+        description: "Provider (e.g., MC)"
         required: true
-        default: "CH2"
+        default: "MC"
       environment:
         description: "Environment name"
         required: true
@@ -36,7 +36,7 @@ on:
 
 jobs:
   build:
-    name: 🧱 Build Mule Application
+    name: Build Mule Application
     runs-on: ubuntu-latest
 
     steps:
