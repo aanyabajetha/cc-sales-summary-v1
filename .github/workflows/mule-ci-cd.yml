@@ -34,10 +34,27 @@ on:
         required: false
         default: "0.1"
 
+
 jobs:
+  validate_inputs:
+    name: Validate Inputs
+    runs-on: ubuntu-latest
+    outputs:
+      javaVersion: ${{ steps.validate.outputs.javaVersion }}
+    steps:
+      - id: validate
+        run: |
+          if [[ "${{ github.event.inputs.javaVersion }}" != "8" && "${{ github.event.inputs.javaVersion }}" != "17" ]]; then
+            echo "Error: javaVersion input must be '8' or '17'."
+            exit 1
+          fi
+          echo "::set-output name=javaVersion::${{ github.event.inputs.javaVersion }}"
+
   build:
     name: Build Mule Application
     runs-on: ubuntu-latest
+    needs: validate_inputs
+    if: ${{ always() }}
 
     steps:
       - name: Checkout repository
@@ -47,7 +64,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: ${{ github.event.inputs.javaVersion }}
+          java-version: ${{ needs.validate_inputs.outputs.javaVersion }}
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -63,6 +80,7 @@ jobs:
     name: Publish to Exchange
     runs-on: ubuntu-latest
     needs: build
+    if: ${{ always() }}
 
     steps:
       - name: Checkout repository
@@ -72,7 +90,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: ${{ github.event.inputs.javaVersion }}
+          java-version: ${{ needs.validate_inputs.outputs.javaVersion }}
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -101,6 +119,7 @@ jobs:
     name: Deploy to CloudHub 2.0
     runs-on: ubuntu-latest
     needs: publish
+    if: ${{ always() }}
 
     steps:
       - name: Checkout repository
@@ -110,7 +129,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: ${{ github.event.inputs.javaVersion }}
+          java-version: ${{ needs.validate_inputs.outputs.javaVersion }}
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -140,3 +159,28 @@ jobs:
             -Dapp.replicas=${{ env.APP_REPLICAS }} \
             -Dapp.vcores=${{ env.APP_VCORES }} \
             --settings settings.xml
+
+  notify_failure:
+    name: Notify Failure by Email
+    runs-on: ubuntu-latest
+    needs: [build, publish, deploy]
+    if: failure()
+
+    steps:
+      - name: Send failure notification email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          to: your.email@example.com
+          from: ${{ secrets.GMAIL_USERNAME }}
+          subject: "MuleSoft CI/CD Pipeline Failed - ${{ github.workflow }}"
+          body: |
+            One or more jobs in the MuleSoft CI/CD pipeline have failed.
+            Workflow: ${{ github.workflow }}
+            Run number: ${{ github.run_number }}
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref }}
+            URL: ${{ github.run_url }}
