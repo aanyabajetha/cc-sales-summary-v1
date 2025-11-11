@@ -35,28 +35,11 @@ on:
         default: "0.1"
 
 jobs:
-  validate_inputs:
-    name: Validate Inputs
-    runs-on: ubuntu-latest
-    outputs:
-      javaVersion: ${{ steps.set_java_version.outputs.javaVersion }}
-    steps:
-      - id: set_java_version
-        run: |
-          if [[ "${{ github.event.inputs.javaVersion }}" != "8" && "${{ github.event.inputs.javaVersion }}" != "17" ]]; then
-            echo "Invalid javaVersion input ${{ github.event.inputs.javaVersion }}. Must be '8' or '17'."
-            exit 1
-          fi
-          echo "javaVersion=${{ github.event.inputs.javaVersion }}" >> $GITHUB_OUTPUT
-
   build:
     name: Build Mule Application
     runs-on: ubuntu-latest
-    needs: validate_inputs
-    steps:
-      - name: Debug Java version output
-        run: echo "Java version is '${{ needs.validate_inputs.outputs.javaVersion }}'"
 
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -64,8 +47,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          # Use output of validation step exactly as it is
-          java-version: ${{ needs.validate_inputs.outputs.javaVersion }}
+          java-version: ${{ github.event.inputs.javaVersion }}
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -81,10 +63,8 @@ jobs:
     name: Publish to Exchange
     runs-on: ubuntu-latest
     needs: build
-    steps:
-      - name: Debug Java version output
-        run: echo "Java version is '${{ needs.validate_inputs.outputs.javaVersion }}'"
 
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -92,7 +72,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: ${{ needs.validate_inputs.outputs.javaVersion }}
+          java-version: ${{ github.event.inputs.javaVersion }}
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -121,10 +101,8 @@ jobs:
     name: Deploy to CloudHub 2.0
     runs-on: ubuntu-latest
     needs: publish
-    steps:
-      - name: Debug Java version output
-        run: echo "Java version is '${{ needs.validate_inputs.outputs.javaVersion }}'"
 
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -132,7 +110,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: ${{ needs.validate_inputs.outputs.javaVersion }}
+          java-version: ${{ github.event.inputs.javaVersion }}
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -168,6 +146,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, publish, deploy]
     if: failure()
+
     steps:
       - name: Send failure notification email
         uses: dawidd6/action-send-mail@v3
@@ -176,7 +155,7 @@ jobs:
           server_port: 465
           username: ${{ secrets.GMAIL_USERNAME }}
           password: ${{ secrets.GMAIL_APP_PASSWORD }}
-          to: your.email@example.com
+          to: your.email@example.com    # Change to your email
           from: ${{ secrets.GMAIL_USERNAME }}
           subject: "MuleSoft CI/CD Pipeline Failed - ${{ github.workflow }}"
           body: |
